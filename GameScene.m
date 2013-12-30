@@ -116,23 +116,33 @@
         
         CCSprite *futureSprite;
         
-        
+        // Add the possible future offset of the Piece
         CGPoint futurePos = ccpAdd(selSprite.position, translation);
         selSprite.position = futurePos;
         
+        // Assign the possible future Sprite to a new FutureSprite
         futureSprite = selSprite;
         
+        // Create an opposite offset translation CGPoint
         CGPoint translationBack = translation;
         
         translationBack.x = - translationBack.x;
         translationBack.y = - translationBack.y;
         
+        // Backwards selSprite to its original position as we now
+        // have futureSprite with the possible future position
         futurePos = ccpAdd(selSprite.position, translationBack);
         selSprite.position = futurePos;
         futurePos = ccpAdd(selSprite.position, translation);
         
 
         //Check for areas
+        // This is a board game that has possible areas for the pieces to
+        // move around. The pieces are already positioned on good spots.
+        // First we check for in which area is the piece, then we check
+        // if its future position is valid and then if it is collidin with
+        // any other piece around it.
+        // If everything is ok we add the offset translation to it.
         // AREA_1
         if((selSprite.position.x <= AREA_A1_X2) && ((selSprite.position.y >=  AREA_A1_Y1) && ((selSprite.position.y <=  AREA_A1_Y2))))
            {
