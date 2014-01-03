@@ -1,118 +1,11 @@
 
-#import "GameScene.h"
-#import "AppDelegate.h"
 
-
-@implementation GameScene
-
-// Helper class method that creates a Scene.
-+(CCScene *) scene
-{
-	// 'scene' is an autorelease object.
-	CCScene *scene = [CCScene node];
-	
-	// 'layer' is an autorelease object.
-	GameScene *layer = [GameScene node];
-	
-	// add layer as a child to scene
-	[scene addChild: layer];
-	
-	// return the scene
-	return scene;
-}
-
-- (id)init {
-    
-    self = [super init];
-    if(self) {
-        CGSize winSize = [CCDirector sharedDirector].winSize;
-        
-        [CCTexture2D setDefaultAlphaPixelFormat:kCCTexture2DPixelFormat_RGB565];
-        background = [CCSprite spriteWithFile:kBGTABULEIRO1];
-        background.anchorPoint = ccp(0,0);
-        [self addChild:background];
-        [CCTexture2D setDefaultAlphaPixelFormat:kCCTexture2DPixelFormat_Default];
-        
-        movableSprites = [[NSMutableArray alloc] init];
-        NSArray *images = [NSArray arrayWithObjects:kPIECER, kPIECEG, kPIECEY, kPIECEB, nil];
-       
-        
-        for(int i = 0; i < images.count; ++i) {
-            NSString *image = [images objectAtIndex:0];
-            CCSprite *sprite = [CCSprite spriteWithFile:image];
-            sprite.position = ccp(AREA_A1_X1 + (i * 56), AREA_A1A6A2_Y);
-            [self addChild:sprite];
-            [movableSprites addObject:sprite];
-        }
-        
-        for(int i = 0; i < images.count; ++i) {
-            NSString *image = [images objectAtIndex:1];
-            CCSprite *sprite = [CCSprite spriteWithFile:image];
-            sprite.position = ccp(AREA_A2_X2 - (i * 56), AREA_A1A6A2_Y);
-            [self addChild:sprite];
-            [movableSprites addObject:sprite];
-        }
- 
-        for(int i = 0; i < images.count; ++i) {
-            NSString *image = [images objectAtIndex:2];
-            CCSprite *sprite = [CCSprite spriteWithFile:image];
-            sprite.position = ccp(AREA_A1_X1 + (i * 56), AREA_A3A5A4_Y);
-            [self addChild:sprite];
-            [movableSprites addObject:sprite];
-        }
-        
-        for(int i = 0; i < images.count; ++i) {
-            NSString *image = [images objectAtIndex:3];
-            CCSprite *sprite = [CCSprite spriteWithFile:image];
-            sprite.position = ccp(AREA_A2_X2 - (i * 56), AREA_A3A5A4_Y);
-            [self addChild:sprite];
-            [movableSprites addObject:sprite];
-        }
-        
-    }
-    
-    [[CCTouchDispatcher sharedDispatcher] addTargetedDelegate:self priority:0 swallowsTouches:YES];
-    
-    return self;
-}
-
-- (void)selectSpriteForTouch:(CGPoint)touchLocation {
-    CCSprite * newSprite = nil;
-    for (CCSprite *sprite in movableSprites) {
-        if (CGRectContainsPoint(sprite.boundingBox, touchLocation)) {
-            newSprite = sprite;
-            break;
-        }
-    }
-    if (newSprite != selSprite) {
-        [selSprite stopAllActions];
-        [selSprite runAction:[CCRotateTo actionWithDuration:0.1 angle:0]];
-        CCRotateTo * rotLeft = [CCRotateBy actionWithDuration:0.1 angle:-4.0];
-        CCRotateTo * rotCenter = [CCRotateBy actionWithDuration:0.1 angle:0.0];
-        CCRotateTo * rotRight = [CCRotateBy actionWithDuration:0.1 angle:4.0];
-        CCSequence * rotSeq = [CCSequence actions:rotLeft, rotCenter, rotRight, rotCenter, nil];
-        [newSprite runAction:[CCRepeatForever actionWithAction:rotSeq]];
-        selSprite = newSprite;
-    }
-}
-
-- (BOOL)ccTouchBegan:(UITouch *)touch withEvent:(UIEvent *)event {
-    CGPoint touchLocation = [self convertTouchToNodeSpace:touch];
-    [self selectSpriteForTouch:touchLocation];
-    return TRUE;
-}
-
-- (CGPoint)boundLayerPos:(CGPoint)newPos {
-    CGSize winSize = [CCDirector sharedDirector].winSize;
-    CGPoint retval = newPos;
-    retval.x = MIN(retval.x, 0);
-    retval.x = MAX(retval.x, -background.contentSize.width+winSize.width);
-    retval.y = self.position.y;
-    return retval;
-}
 
 - (void)panForTranslation:(CGPoint)translation {
     if (selSprite) {
+        
+        
+        // From
         
         CCSprite *futureSprite;
         
@@ -135,91 +28,20 @@
         selSprite.position = futurePos;
         futurePos = ccpAdd(selSprite.position, translation);
         
-
-        //Check for areas
-        // This is a board game that has possible areas for the pieces to
-        // move around. The pieces are already positioned on good spots.
-        // First we check for in which area is the piece, then we check
-        // if its future position is valid and then if it is collidin with
-        // any other piece around it.
-        // If everything is ok we add the offset translation to it.
-        // AREA_1
-        if((selSprite.position.x <= AREA_A1_X2) && ((selSprite.position.y >=  AREA_A1_Y1) && ((selSprite.position.y <=  AREA_A1_Y2))))
-           {
-               if((selSprite.position.x + translation.x >= AREA_A1_X1) && ((selSprite.position.y + translation.y >=  AREA_A1_Y1) && (selSprite.position.y + translation.y <=  AREA_A1_Y2)) && (![self detectCollision:futureSprite]))
-               {
-                   selSprite.position = futurePos;
-                   CGPoint newPos = ccpAdd(selSprite.position, translation);
-                   selSprite.position = newPos;
-               }
-           }
-
-        // AREA_2
-        if((selSprite.position.x >= AREA_A2_X1) && ((selSprite.position.y >=  AREA_A1_Y1) && ((selSprite.position.y <=  AREA_A1_Y2))))
-        {
-            if((selSprite.position.x + translation.x < AREA_A2_X2) && ((selSprite.position.y + translation.y >=  AREA_A1_Y1) && (selSprite.position.y + translation.y <=  AREA_A1_Y2)) && (![self detectCollision:futureSprite]))
-            {
-                selSprite.position = futurePos;
-                CGPoint newPos = ccpAdd(selSprite.position, translation);
-                selSprite.position = newPos;
-            }
-        }
         
-        // AREA_6
-        if(((selSprite.position.x >= AREA_A6_X1) && ((selSprite.position.x <= AREA_A6_X2))) && (selSprite.position.y >  AREA_A6_Y1))
-        {
-            if(((selSprite.position.x + translation.x >= AREA_A6_X1) && ((selSprite.position.x + translation.x <= AREA_A6_X2))) && ((selSprite.position.y + translation.y >=  AREA_A6_Y1 - 1) && (selSprite.position.y + translation.y <=  AREA_A6_Y2)) && (![self detectCollision:futureSprite]))
-            {
-                selSprite.position = futurePos;
-                CGPoint newPos = ccpAdd(selSprite.position, translation);
-                selSprite.position = newPos;
-            }
-        }
+        // To:
         
-        // AREA_7
-        NSLog(@"x= %f, y= %f",selSprite.position.x, selSprite.position.y);
-        if(((selSprite.position.x >= AREA_A7_X1) && ((selSprite.position.x <= AREA_A7_X2))) && ((selSprite.position.y <=  AREA_A7_Y1) && (selSprite.position.y >=  AREA_A7_Y2)))
-        {
-            if(((selSprite.position.x + translation.x >= AREA_A7_X1) && ((selSprite.position.x + translation.x <= AREA_A7_X2))) && ((selSprite.position.y + translation.y <=  AREA_A7_Y1 + 1) && (selSprite.position.y + translation.y >=  AREA_A7_Y2 - 1)) && (![self detectCollision:futureSprite]))
-            {
-                selSprite.position = futurePos;
-                CGPoint newPos = ccpAdd(selSprite.position, translation);
-                selSprite.position = newPos;
-            }
-        }
+        CCSprite *futureSprite;
+        futureSprite = [[CCSprite alloc]init];
         
-        // AREA_5
-        if(((selSprite.position.x >= AREA_A5_X1) && ((selSprite.position.x <= AREA_A5_X2))) && ((selSprite.position.y >=  AREA_A5_Y1) && (selSprite.position.y <=  AREA_A5_Y2)))
-        {
-            if(((selSprite.position.x + translation.x >= AREA_A5_X1) && ((selSprite.position.x + translation.x <= AREA_A5_X2))) && ((selSprite.position.y + translation.y >=  AREA_A5_Y1) && (selSprite.position.y + translation.y >=  AREA_A5_Y1)) && (![self detectCollision:futureSprite]))
-            {
-                selSprite.position = futurePos;
-                CGPoint newPos = ccpAdd(selSprite.position, translation);
-                selSprite.position = newPos;
-            }
-        }
         
-        // AREA_3
-        if((selSprite.position.x <= AREA_A3_X2) && ((selSprite.position.y >=  AREA_A3_Y1) && ((selSprite.position.y <=  AREA_A3_Y2))))
-        {
-            if((selSprite.position.x + translation.x >= AREA_A3_X1) && ((selSprite.position.y + translation.y >=  AREA_A3_Y1) && (selSprite.position.y + translation.y <=  AREA_A3_Y2)) && (![self detectCollision:futureSprite]))
-            {
-                selSprite.position = futurePos;
-                CGPoint newPos = ccpAdd(selSprite.position, translation);
-                selSprite.position = newPos;
-            }
-        }
+        CGPoint futurePos = ccpAdd(selSprite.position, translation);
         
-        // AREA_4
-        if((selSprite.position.x >= AREA_A4_X1) && ((selSprite.position.y >=  AREA_A4_Y1) && ((selSprite.position.y <=  AREA_A4_Y2))))
-        {
-            if((selSprite.position.x + translation.x < AREA_A4_X2) && ((selSprite.position.y + translation.y >=  AREA_A4_Y1) && (selSprite.position.y + translation.y <=  AREA_A4_Y2)) && (![self detectCollision:futureSprite]))
-            { //  && (![self futureSprite])
-                selSprite.position = futurePos;
-                CGPoint newPos = ccpAdd(selSprite.position, translation);
-                selSprite.position = newPos;
-            }
-        }
+        futureSprite.position = futurePos;
+        
+        futurePos = ccpAdd(selSprite.position, translation);
+        
+    // Area Checking
 
         //NSLog(@"x= %f, y= %f",selSprite.position.x, selSprite.position.y);
     } else {
